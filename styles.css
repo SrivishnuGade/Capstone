@@ -1,0 +1,71 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing: border-box;
+}
+body,
+html{
+    overflow-x: hidden;
+    font-family: "Poppins", sans-serif;
+}
+
+.webgl{
+    position: absolute;
+    top:0;
+    left: 0;
+    z-index: 1;
+}
+
+nav{
+    color: black;
+    z-index: 2;
+    position: relative;
+    padding: 4rem 8rem;
+    display: flex;
+    justify-content: space-between;
+}
+
+nav a{
+    text-decoration: none;
+    color: black;
+    font-weight: bold;
+}
+
+nav ul{
+    list-style: none;
+    gap:2rem;
+}
+
+.title{
+    color:black;
+    z-index: 2;
+    position: absolute;
+    font-size: 3rem;
+    left: 50%;
+    top: 25%;
+    transform: translate(-50%, -25%);
+}
+
+/* Style for the map container */
+#map {
+    height: 100%; /* The map takes up all remaining space below the canvas */
+    position: absolute;
+    top: 100vh;
+    left: 0;
+    width: 100%;
+    z-index: 1; /* Ensure the map stays below the canvas */
+}
+
+/* Style for the canvas */
+#myCanvas {
+    /* position: absolute;
+    top: 0;
+    left: 0; */
+    width: 100vw;  /* Fullscreen width */
+    height: 100vh; /* Fullscreen height */
+    z-index: -1;  /* Ensure the canvas is on top of the map */
+    /* border: 2px solid black; */
+    /* transform: scaleX(-1);
+    transform-origin: center; */
+}
+
