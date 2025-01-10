@@ -46,16 +46,6 @@ nav ul{
     transform: translate(-50%, -25%);
 }
 
-/* Style for the map container */
-#map {
-    height: 100%; /* The map takes up all remaining space below the canvas */
-    position: absolute;
-    top: 100vh;
-    left: 0;
-    width: 100%;
-    z-index: 1; /* Ensure the map stays below the canvas */
-}
-
 /* Style for the canvas */
 #myCanvas {
     /* position: absolute;
