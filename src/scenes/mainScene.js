@@ -1,8 +1,10 @@
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+// import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { initFog } from '../environment/fog.js';
 import { initGround } from '../environment/ground.js';
 import { initSky } from '../environment/sky.js';
+import { Room ,Floor, RoomWindow} from '../classes/room.js';
+
 
 let lx = 0.0;
 let ly = 100.0;
@@ -24,9 +26,80 @@ document.body.appendChild(infoDiv);
 const scene = new THREE.Scene();
 initFog(scene);
 
+let radius = 200; 
+let isDragging = false;
+let previousMousePosition = { x: 0, y: 0 };
+let targetRotationX = -90-45, targetRotationY = 10;
+let rotationSpeed = 0.7;
+let zoomSpeed = 0.05;
+let camX = 0, camZ = 0;
+let camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 2000);
+camera.position.set(0, 55, -90);
 
-const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 2000);
-camera.position.set(30, 75, 350);
+const higherFOVCamera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 0.1, 1000);
+higherFOVCamera.position.copy(camera.position);
+higherFOVCamera.lookAt(scene.position);
+
+
+function onMouseDown(event) {
+    isDragging = true;
+    previousMousePosition = {
+        x: event.clientX,
+        y: event.clientY
+    };
+}
+function onMouseMove(event) {
+    if (isDragging) {
+        const deltaX = event.clientX - previousMousePosition.x;
+        const deltaY = event.clientY - previousMousePosition.y;
+
+        targetRotationX -= deltaX * rotationSpeed;
+        targetRotationY += deltaY * rotationSpeed;
+
+        previousMousePosition = {
+            x: event.clientX,
+            y: event.clientY
+        };
+    }
+}
+function onMouseUp() {
+    isDragging = false;
+}
+function onWheel(event) {
+    // Adjust the radius based on the scroll input
+    radius += event.deltaY * zoomSpeed;
+    radius = Math.max(10, Math.min(500, radius)); // Clamp the radius
+}
+function onKeyDown(event) {
+    if (event.key === 'c' || event.key === 'C') {
+        if (camera === higherFOVCamera) {
+            camera = new THREE.PerspectiveCamera(20, window.innerWidth / window.innerHeight, 10, 8000);
+            camera.position.copy(higherFOVCamera.position);
+            camera.lookAt(scene.position);
+        } else {
+            higherFOVCamera.position.copy(camera.position);
+            higherFOVCamera.lookAt(scene.position);
+            camera = higherFOVCamera;
+        }
+    }
+    else if (event.key === 'w' || event.key === 'W') {
+        camX+=0.1;
+    }
+    else if (event.key === 's' || event.key === 'S') {
+        camX-=0.1;
+    }
+    else if (event.key === 'a' || event.key === 'A') {
+        camZ+=0.1;
+    }
+    else if (event.key === 'd' || event.key === 'D') {
+        camZ-=0.1;
+    }
+}
+window.addEventListener('mousedown', onMouseDown, false);
+window.addEventListener('mousemove', onMouseMove, false);
+window.addEventListener('mouseup', onMouseUp, false);
+window.addEventListener('wheel', onWheel, false);
+window.addEventListener('keydown', onKeyDown, false);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -34,11 +107,11 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
 
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.minPolarAngle = 0;
-controls.maxPolarAngle = Math.PI / 2;
-controls.enableDamping = true;
-controls.dampingFactor = 0.1;
+// const controls = new OrbitControls(camera, renderer.domElement);
+// controls.minPolarAngle = 0;
+// controls.maxPolarAngle = Math.PI / 2;
+// controls.enableDamping = true;
+// controls.dampingFactor = 0.1;
 
 const sunlight = new THREE.DirectionalLight(0xffffff, 3);
 lx = 100 * Math.cos(THREE.MathUtils.degToRad(theta));
@@ -57,107 +130,101 @@ sunlight.shadow.mapSize.width = 4096;
 sunlight.shadow.mapSize.height = 4096;
 scene.add(sunlight);
 
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+scene.add(ambientLight);
+
 initGround(scene);
 initSky(scene);
 
-let roomDimensions = { x: 20, y: 0, z: 15 };
-let roomGroup = null;
+const wallMaterial = new THREE.MeshStandardMaterial({ color: 0xFFFFFF });
+const frontWallGeometry = new THREE.BoxGeometry(100, 10,1);
+const frontWall = new THREE.Mesh(frontWallGeometry, wallMaterial);
+frontWall.position.set(0, 5, -200);
+frontWall.castShadow = true;
+frontWall.receiveShadow = true;
+scene.add(frontWall);
 
-function createRoom(x, y, z) {
-    const thickness = 1;
-    const scale = 2;
-    const group = new THREE.Group();
+let fullHouse= new THREE.Group();
+scene.add(fullHouse);
+let roof=true;
 
-    // Enable shadow mapping
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+const livingRoom = new Room('Living Room', scene,fullHouse, 0, 0, 25, 10, 10,roof);
+const bedroom2 = new Room('Bedroom2', scene,fullHouse, -12.5+6.5, 10, 13, 10, 10,roof);
+const kitchen = new Room('Kitchen', scene,fullHouse, 12.5+4, 0, 8, 10, 10,roof);
+const bedroom = new Room('Bedroom', scene,fullHouse, 12.5+8-6, 10, 12, 10, 10,roof);
+const bathroom = new Room('Bathroom', scene,fullHouse, 4.5, 5+3+4, 8, 6, 10,roof);
+const floorbath= new Floor('Floorbath',scene,fullHouse,0.5+4,7,8,4,roof)
+// const bedroom = new Room('Bedroom', scene, 10, -20, 20, 15, 10);
 
-    // Material for walls
-    const wallMaterial = new THREE.MeshStandardMaterial({ color: 0xFFFFFF });
+livingRoom.createRoom();
+livingRoom.addDoor('left',-3);
+livingRoom.addWindow(4,4,'left',2.5);
+livingRoom.addWindow(4,4,'front',-8);
+livingRoom.addWindow(2,4,'front',1);
 
-    // Front wall
-    const frontWallGeometry = new THREE.BoxGeometry((x + 2 * thickness) * scale, 10 * scale, thickness * scale);
-    const frontWall = new THREE.Mesh(frontWallGeometry, wallMaterial);
-    frontWall.position.set(0, 5 * scale, -z * scale / 2 - 0.5 * thickness * scale);
-    frontWall.castShadow = true;  // Wall casts shadows
-    frontWall.receiveShadow = true; // Wall receives shadows
-    group.add(frontWall);
+livingRoom.addDoor('right',-3);
+livingRoom.addDoor('back',10.5);
+livingRoom.addCavity('back',8,4.5)
 
-    // Back wall
-    // const backWallGeometry = new THREE.BoxGeometry((x + 2 * thickness) * scale, 10 * scale, thickness * scale);
-    // const backWall = new THREE.Mesh(backWallGeometry, wallMaterial);
-    // backWall.position.set(0, 5 * scale, z * scale / 2 + 0.5 * thickness * scale);
-    // backWall.castShadow = true;
-    // backWall.receiveShadow = true;
-    // group.add(backWall);
+bedroom2.createRoom();
+bedroom2.addDoor('right',3);
+bedroom2.addWindow(4,4,'left');
+bedroom2.addWindow(2,4,'back',3);
 
-    // Left wall
-    const leftWallGeometry = new THREE.BoxGeometry(thickness * scale, 10 * scale, z * scale);
-    const leftWall = new THREE.Mesh(leftWallGeometry, wallMaterial);
-    leftWall.position.set(-x * scale / 2 - 0.5 * thickness * scale, 5 * scale, 0);
-    leftWall.castShadow = true;
-    leftWall.receiveShadow = true;
-    group.add(leftWall);
+kitchen.createRoom();
+kitchen.addDoor('left',3);
+kitchen.addWindow(2,2,'right');
+kitchen.addWindow(2,2,'front');
 
-    // Right wall
-    const rightWallGeometry = new THREE.BoxGeometry(thickness * scale, 10 * scale, z * scale);
-    const rightWall = new THREE.Mesh(rightWallGeometry, wallMaterial);
-    rightWall.position.set(x * scale / 2 + 0.5 * thickness * scale, 5 * scale, 0);
-    rightWall.castShadow = true;
-    rightWall.receiveShadow = true;
-    group.add(rightWall);
+bedroom.createRoom();
+bedroom.addDoor('front',4);
+bedroom.addWindow(5,4,'back');
 
-    // Floor
-    const floorMaterial = new THREE.MeshStandardMaterial({ color: 0xaaaaaa });
-    const floorGeometry = new THREE.BoxGeometry(x * scale, thickness * scale, z * scale);
-    const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-    floor.position.set(0, 0.5 * thickness * scale, 0);
-    floor.receiveShadow = true;
-    floor.castShadow = true;
-    group.add(floor);
+bathroom.createRoom();
+bathroom.addDoor('front',1.5);
+bathroom.addWindow(2,2,'back',0,2);
 
-    // Add the group to the scene
-    scene.add(group);
-    roomGroup = group;
-}
+floorbath.createFloor();
 
-createRoom(roomDimensions.x, roomDimensions.y, roomDimensions.z);
-
-function updateRoomDimensions() {
-    if (roomGroup) {
-        scene.remove(roomGroup);
-    }
-    createRoom(roomDimensions.x, roomDimensions.y, roomDimensions.z);
-    infoDiv.textContent = `Room Dimensions: X = ${roomDimensions.x}, Z = ${roomDimensions.z}`;
-}
 
 function animate() {
-    controls.update();
+    // controls.update();
+    
+    if (camera === higherFOVCamera) {
+        // Cockpit view
+        camera.position.set(
+            camX,
+            5.5,
+            camZ
+        );
+        const offsetX = -radius * Math.sin(THREE.MathUtils.degToRad(targetRotationX)) * Math.cos(THREE.MathUtils.degToRad(targetRotationY));
+        const offsetY = -radius * Math.sin(THREE.MathUtils.degToRad(targetRotationY));
+        const offsetZ = -radius * Math.cos(THREE.MathUtils.degToRad(targetRotationX)) * Math.cos(THREE.MathUtils.degToRad(targetRotationY));
+        camera.lookAt(
+            camX + offsetX,
+            5.5+offsetY,
+            camZ+offsetZ
+        );
+    } else {
+        targetRotationY=Math.max(0, Math.min(90, targetRotationY));
+        const offsetX = radius * Math.sin(THREE.MathUtils.degToRad(targetRotationX)) * Math.cos(THREE.MathUtils.degToRad(targetRotationY));
+        const offsetY = radius * Math.sin(THREE.MathUtils.degToRad(targetRotationY));
+        const offsetZ = radius * Math.cos(THREE.MathUtils.degToRad(targetRotationX)) * Math.cos(THREE.MathUtils.degToRad(targetRotationY));
+
+        camera.position.set(
+            offsetX,
+            offsetY,
+            offsetZ
+        );
+
+        camera.lookAt(0,0,0);
+    }
     renderer.render(scene, camera);
     requestAnimationFrame(animate);
 }
 
 animate();
-window.addEventListener('keydown', (event) => {
-    const step = 1;
-    switch (event.key) {
-        case 'W': case 'w':
-            roomDimensions.x += step; 
-            break;
-        case 'S': case 's':
-            roomDimensions.x -= step;
-            break;
-        case 'A': case 'a':
-            roomDimensions.z -= step;
-            break;
-        case 'D': case 'd':
-            roomDimensions.z += step;
-            break;
-    }
-    roomDimensions.x = Math.max(4, roomDimensions.x);
-    roomDimensions.z = Math.max(4, roomDimensions.z);
-    updateRoomDimensions();
-});
+
 
 function createSliderWithLabels(labelText, min, max, step, initialValue, onChange, labels) {
     const container = document.createElement('div');
@@ -184,6 +251,7 @@ function createSliderWithLabels(labelText, min, max, step, initialValue, onChang
     // Add slider event
     slider.addEventListener('input', () => {
         onChange(slider.value);
+        isDragging=false;
     });
 
     // Create a label container for the slider
@@ -242,4 +310,15 @@ createSliderWithLabels(
         sunlight.position.set(lx, ly, lz);
     },
     ['Summer', 'Winter']
+);
+
+createSliderWithLabels(
+    'Facing Direction',
+    0,360,1,phi,
+    (value) => {
+        phi=parseFloat(value);
+        fullHouse.rotation.set(0,-THREE.MathUtils.degToRad(phi),0);
+        console.log("phi"+phi);
+    },
+    ['N','E','S','W',' ']
 );
