@@ -1,30 +1,26 @@
 import * as THREE from 'three';
-// import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { initFog } from '../environment/fog.js';
 import { initGround } from '../environment/ground.js';
 import { initSky } from '../environment/sky.js';
-import { Room ,Floor, RoomWindow} from '../classes/room.js';
-
+import { initAmbientLight } from '../environment/ambientLight.js';
+import { constructDomLur } from '../construct/domlur.js';
+// import { constructMQTT } from '../construct/mqtt.js';
+import { constructCubicasa } from '../construct/cubicasa.js';
+import { constructPrestige } from '../construct/prestige.js';
+import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
 
 let lx = 0.0;
 let ly = 100.0;
 let lz = 0.0;
 let theta = 90.0;
 let phi = 0.0;
-let lat = 23.5;
-
-// Create a div for displaying the room dimensions
-const infoDiv = document.createElement('div');
-infoDiv.style.position = 'absolute';
-infoDiv.style.top = '10px';
-infoDiv.style.right = '10px';
-infoDiv.style.fontFamily = 'Arial, sans-serif';
-infoDiv.style.fontSize = '16px';
-infoDiv.style.color = 'white';
-document.body.appendChild(infoDiv);
+let lat = 13;
 
 const scene = new THREE.Scene();
 initFog(scene);
+initGround(scene);
+initSky(scene);
+initAmbientLight(scene);
 
 let radius = 200; 
 let isDragging = false;
@@ -36,7 +32,7 @@ let camX = 0, camZ = 0;
 let camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 2000);
 camera.position.set(0, 55, -90);
 
-const higherFOVCamera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 0.1, 1000);
+const higherFOVCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 higherFOVCamera.position.copy(camera.position);
 higherFOVCamera.lookAt(scene.position);
 
@@ -62,17 +58,15 @@ function onMouseMove(event) {
         };
     }
 }
-function onMouseUp() {
-    isDragging = false;
-}
 function onWheel(event) {
-    // Adjust the radius based on the scroll input
     radius += event.deltaY * zoomSpeed;
-    radius = Math.max(10, Math.min(500, radius)); // Clamp the radius
+    radius = Math.max(10, Math.min(500, radius));
 }
 function onKeyDown(event) {
+    var sp=0.5
     if (event.key === 'c' || event.key === 'C') {
         if (camera === higherFOVCamera) {
+            camX=0,camZ=0;
             camera = new THREE.PerspectiveCamera(20, window.innerWidth / window.innerHeight, 10, 8000);
             camera.position.copy(higherFOVCamera.position);
             camera.lookAt(scene.position);
@@ -83,23 +77,32 @@ function onKeyDown(event) {
         }
     }
     else if (event.key === 'w' || event.key === 'W') {
-        camX+=0.1;
+        camX-=sp * Math.sin(THREE.MathUtils.degToRad(targetRotationX));
+        camZ-=sp * Math.cos(THREE.MathUtils.degToRad(targetRotationX));
     }
     else if (event.key === 's' || event.key === 'S') {
-        camX-=0.1;
+        camX+=sp * Math.sin(THREE.MathUtils.degToRad(targetRotationX));
+        camZ+=sp * Math.cos(THREE.MathUtils.degToRad(targetRotationX));
     }
     else if (event.key === 'a' || event.key === 'A') {
-        camZ+=0.1;
+        camX-=sp * Math.cos(THREE.MathUtils.degToRad(targetRotationX));
+        camZ+=sp * Math.sin(THREE.MathUtils.degToRad(targetRotationX));
     }
     else if (event.key === 'd' || event.key === 'D') {
-        camZ-=0.1;
+        camX+=sp * Math.cos(THREE.MathUtils.degToRad(targetRotationX));
+        camZ-=sp * Math.sin(THREE.MathUtils.degToRad(targetRotationX));
     }
 }
 window.addEventListener('mousedown', onMouseDown, false);
 window.addEventListener('mousemove', onMouseMove, false);
-window.addEventListener('mouseup', onMouseUp, false);
+window.addEventListener('mouseup', () => { isDragging = false; }, false);
 window.addEventListener('wheel', onWheel, false);
 window.addEventListener('keydown', onKeyDown, false);
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -107,11 +110,8 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
 
-// const controls = new OrbitControls(camera, renderer.domElement);
-// controls.minPolarAngle = 0;
-// controls.maxPolarAngle = Math.PI / 2;
-// controls.enableDamping = true;
-// controls.dampingFactor = 0.1;
+renderer.xr.enabled = true;
+document.body.appendChild(VRButton.createButton(renderer));
 
 const sunlight = new THREE.DirectionalLight(0xffffff, 3);
 lx = 100 * Math.cos(THREE.MathUtils.degToRad(theta));
@@ -125,16 +125,10 @@ sunlight.shadow.camera.top = 500;
 sunlight.shadow.camera.bottom = -500;
 sunlight.shadow.camera.near = 0.5;
 sunlight.shadow.camera.far = 1000;
-sunlight.shadow.bias = -0.0005;
-sunlight.shadow.mapSize.width = 4096;
-sunlight.shadow.mapSize.height = 4096;
+sunlight.shadow.bias = -0.00006;
+sunlight.shadow.mapSize.width = 16384;
+sunlight.shadow.mapSize.height = 16384;
 scene.add(sunlight);
-
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
-scene.add(ambientLight);
-
-initGround(scene);
-initSky(scene);
 
 const wallMaterial = new THREE.MeshStandardMaterial({ color: 0xFFFFFF });
 const frontWallGeometry = new THREE.BoxGeometry(100, 10,1);
@@ -146,52 +140,78 @@ scene.add(frontWall);
 
 let fullHouse= new THREE.Group();
 scene.add(fullHouse);
-let roof=true;
 
-const livingRoom = new Room('Living Room', scene,fullHouse, 0, 0, 25, 10, 10,roof);
-const bedroom2 = new Room('Bedroom2', scene,fullHouse, -12.5+6.5, 10, 13, 10, 10,roof);
-const kitchen = new Room('Kitchen', scene,fullHouse, 12.5+4, 0, 8, 10, 10,roof);
-const bedroom = new Room('Bedroom', scene,fullHouse, 12.5+8-6, 10, 12, 10, 10,roof);
-const bathroom = new Room('Bathroom', scene,fullHouse, 4.5, 5+3+4, 8, 6, 10,roof);
-const floorbath= new Floor('Floorbath',scene,fullHouse,0.5+4,7,8,4,roof)
-// const bedroom = new Room('Bedroom', scene, 10, -20, 20, 15, 10);
+const chContainer = document.createElement('div');
+chContainer.style.position = 'absolute';
+chContainer.style.top = '10px';
+chContainer.style.right = '10px';
+chContainer.style.zIndex = '20';
+chContainer.style.background = 'rgba(0,0,0,0.5)';
+chContainer.style.padding = '10px';
+chContainer.style.borderRadius = '8px';
 
-livingRoom.createRoom();
-livingRoom.addDoor('left',-3);
-livingRoom.addWindow(4,4,'left',2.5);
-livingRoom.addWindow(4,4,'front',-8);
-livingRoom.addWindow(2,4,'front',1);
+const chLabel = document.createElement('label');
+chLabel.textContent = 'Choose House Type: ';
+chLabel.style.color = '#fff';
+chLabel.style.marginRight = '8px';
 
-livingRoom.addDoor('right',-3);
-livingRoom.addDoor('back',10.5);
-livingRoom.addCavity('back',8,4.5)
+const chSelect = document.createElement('select');
+['Cubicasa', 'Domlur', 'Prestige'].forEach((name, idx) => {
+    const option = document.createElement('option');
+    option.value = idx + 1;
+    option.textContent = name;
+    chSelect.appendChild(option);
+});
+chContainer.appendChild(chLabel);
+chContainer.appendChild(chSelect);
 
-bedroom2.createRoom();
-bedroom2.addDoor('right',3);
-bedroom2.addWindow(4,4,'left');
-bedroom2.addWindow(2,4,'back',3);
+// Roof checkbox
+const roofLabel = document.createElement('label');
+roofLabel.textContent = ' Roof ';
+roofLabel.style.color = '#fff';
+roofLabel.style.marginLeft = '12px';
 
-kitchen.createRoom();
-kitchen.addDoor('left',3);
-kitchen.addWindow(2,2,'right');
-kitchen.addWindow(2,2,'front');
+const roofCheckbox = document.createElement('input');
+roofCheckbox.type = 'checkbox';
+roofCheckbox.checked = true;
 
-bedroom.createRoom();
-bedroom.addDoor('front',4);
-bedroom.addWindow(5,4,'back');
+chContainer.appendChild(roofLabel);
+chContainer.appendChild(roofCheckbox);
 
-bathroom.createRoom();
-bathroom.addDoor('front',1.5);
-bathroom.addWindow(2,2,'back',0,2);
+document.body.appendChild(chContainer);
 
-floorbath.createFloor();
+let roof = roofCheckbox.checked;
+
+// Function to clear and reconstruct house
+function updateHouseType(ch, roof) {
+    scene.remove(fullHouse);
+    fullHouse = new THREE.Group();
+    scene.add(fullHouse);
+
+    if (ch == 1) {
+        constructCubicasa(scene, fullHouse, roof);
+    } else if (ch == 2) {
+        constructDomLur(scene, fullHouse, roof);
+    } else if (ch == 3) {
+        constructPrestige(scene, fullHouse, roof);
+    }
+}
+
+// Initial construction
+updateHouseType(parseInt(chSelect.value), roofCheckbox.checked);
+
+// Listen for dropdown and checkbox changes
+chSelect.addEventListener('change', () => {
+    updateHouseType(parseInt(chSelect.value), roofCheckbox.checked);
+});
+roofCheckbox.addEventListener('change', () => {
+    updateHouseType(parseInt(chSelect.value), roofCheckbox.checked);
+});
 
 
-function animate() {
-    // controls.update();
-    
+function renderLoop() {
     if (camera === higherFOVCamera) {
-        // Cockpit view
+        targetRotationY=Math.max(-90, Math.min(90, targetRotationY));
         camera.position.set(
             camX,
             5.5,
@@ -216,15 +236,12 @@ function animate() {
             offsetY,
             offsetZ
         );
-
         camera.lookAt(0,0,0);
     }
     renderer.render(scene, camera);
-    requestAnimationFrame(animate);
 }
 
-animate();
-
+renderer.setAnimationLoop(renderLoop);
 
 function createSliderWithLabels(labelText, min, max, step, initialValue, onChange, labels) {
     const container = document.createElement('div');
