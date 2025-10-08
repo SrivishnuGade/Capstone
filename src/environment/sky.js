@@ -1,5 +1,6 @@
 // src/environment/sky.js
 import * as THREE from 'three';
+import { scale } from '../scenes/mainScene.js';
 
 /* adds sky object to the 3D scene and creates a shader materialwith custom vertex and fragment shader, which generates
 generates a gradient sky with light blue at the top and light green at the bottom */
@@ -39,7 +40,7 @@ export function initSky(scene) {
         side: THREE.BackSide
     });
 
-    const skyGeometry = new THREE.SphereGeometry(1000, 32, 15);
+    const skyGeometry = new THREE.SphereGeometry(1000 * scale, 32, 15);
     const sky = new THREE.Mesh(skyGeometry, skyMaterial);
     scene.add(sky);
 }

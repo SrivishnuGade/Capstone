@@ -1,19 +1,20 @@
 import * as THREE from 'three';
 import { CSG } from 'three-csg-ts';
+import { scale } from '../scenes/mainScene.js';
 
 class Room{
     constructor(name,scene,fullgroup,x,y,length,width,height,roof=false,color=0xD3D3D3){
         this.color = color;
         this.name = name;
         this.scene = scene;
-        this.x = x;
-        this.y = y;
-        this.length = length;
-        this.width = width;
-        this.height = height;
+        this.x = x*scale;
+        this.y = y*scale;
+        this.length = length*scale;
+        this.width = width*scale;
+        this.height = height*scale;
         this.roof=roof;
         this.walls = {};
-        this.thickness = 1;
+        this.thickness = 1*scale;
         this.group = new THREE.Group();
         fullgroup.add(this.group);
     }
@@ -122,10 +123,10 @@ class Room{
         const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
         const sprite = new THREE.Sprite(material);
         const aspect = size / baseSize;
-        sprite.scale.set(2 * aspect, 2, 2); // Width scales with aspect, height stays the same
+        sprite.scale.set(2*scale * aspect, 2*scale, 2*scale); // Width scales with aspect, height stays the same
 
         // Position the sprite at the centroid and slightly above the floor
-        sprite.position.set(0, this.thickness + 5, 0);
+        sprite.position.set(0, this.thickness + 5*scale, 0);
 
         this.group.add(sprite);
 
@@ -147,6 +148,10 @@ class Room{
         // roomGroup = group;
     }
     addWindow(width, height, wall, offsetX=0, offsetY=0) {
+        width=width*scale;
+        height=height*scale;
+        offsetX=offsetX*scale;
+        offsetY=offsetY*scale;
         if (!this.walls[`outer${wall.charAt(0).toUpperCase() + wall.slice(1)}`] || 
             !this.walls[`inner${wall.charAt(0).toUpperCase() + wall.slice(1)}`]) {
             console.error(`Outer or inner wall for ${wall} not found`);
@@ -251,6 +256,7 @@ class Room{
         }
     }
     addDoor(wall, offsetX=0) {
+        offsetX=offsetX*scale;
         if (!this.walls[`outer${wall.charAt(0).toUpperCase() + wall.slice(1)}`] || 
             !this.walls[`inner${wall.charAt(0).toUpperCase() + wall.slice(1)}`]) {
             console.error(`Outer or inner wall for ${wall} not found`);
@@ -258,11 +264,11 @@ class Room{
         }
 
         const doorGeometry = new THREE.BoxGeometry(
-            wall === 'left' || wall === 'right' ? this.thickness/2  : 3,
-            7,
-            wall === 'left' || wall === 'right' ? 3 : this.thickness/2
+            wall === 'left' || wall === 'right' ? this.thickness/2  : 3*scale,
+            7*scale,
+            wall === 'left' || wall === 'right' ? 3*scale : this.thickness/2
         );
-        const offsetY=-1.5;
+        const offsetY=-1.5*scale;
         switch(wall) {
             case 'front':
                 doorGeometry.translate(-offsetX, offsetY,0);
@@ -354,6 +360,8 @@ class Room{
         }
     }  
     addCavity(wall, width, offsetX = 0) {
+        width=width*scale;
+        offsetX=offsetX*scale;
         if (!this.walls[`outer${wall.charAt(0).toUpperCase() + wall.slice(1)}`] || 
             !this.walls[`inner${wall.charAt(0).toUpperCase() + wall.slice(1)}`]) {
             console.error(`Outer or inner wall for ${wall} not found`);
@@ -462,12 +470,12 @@ class Floor{
     constructor(name,scene,fullgroup,x,y,length,width,roof=false){
         this.name = name;
         this.scene = scene;
-        this.x = x;
-        this.y = y;
-        this.length = length;
-        this.width = width;
+        this.x = x*scale;
+        this.y = y*scale;
+        this.length = length * scale;
+        this.width = width * scale;
         this.roof=roof;
-        this.thickness = 1;
+        this.thickness = 1*scale;
         this.group = new THREE.Group();
         fullgroup.add(this.group);
     }
@@ -487,7 +495,7 @@ class Floor{
             const roofMaterial = new THREE.MeshStandardMaterial({ color: 0xaaaaaa });
             const roofGeometry = new THREE.BoxGeometry(this.length, thickness, this.width);
             const roof = new THREE.Mesh(roofGeometry, roofMaterial);
-            roof.position.set(0, 10+thickness/2, 0);
+            roof.position.set(0, 10*scale+thickness/2, 0);
             roof.receiveShadow = true;
             roof.castShadow = true;
             this.group.add(roof);
@@ -501,84 +509,4 @@ class Floor{
 }
 
 
-class Door extends Room{
-    constructor(name,scene,x,y,length,width,height){
-        super(name,scene,x,y,length,width,height);
-    }
-}
-
-
-
-class RoomWindow {
-    constructor(room,scene, width, height, wall, offsetX = 0, offsetY = 0) {
-        this.room = room;
-        this.width = width;
-        this.height = height;
-        this.wall = wall;
-        this.offsetX = offsetX;
-        this.offsetY = offsetY;
-        this.scene=scene;
-        this.createWindow();
-    }
-
-    createWindow() {
-        const windowMaterial = new THREE.MeshStandardMaterial({ color: 0x00A0FF, transparent: true, opacity: 0.9 });
-        let windowGeometry;
-        let windowMesh;
-        const x = this.room.x
-        const y= this.room.y
-        
-        // Position based on wall selection
-        switch (this.wall) {
-            case 'front':
-                windowGeometry = new THREE.BoxGeometry(this.width, this.height, this.room.thickness*8);
-                windowMesh = new THREE.Mesh(windowGeometry, windowMaterial);
-                windowMesh.position.set(x+this.offsetX, this.room.height / 2 + this.offsetY, y-this.room.width / 2 );
-                console.error(this.room.x+this.offsetX, this.room.height / 2 + this.offsetY, this.room.y-this.room.width / 2 );
-                windowMesh.castShadow = true;
-        windowMesh.receiveShadow = true;
-        console.log(windowMesh.position)
-        
-        this.scene.add(windowMesh);
-                break;
-            case 'back':
-                windowGeometry = new THREE.BoxGeometry(this.width, this.height, this.room.thickness*2);
-                windowMesh = new THREE.Mesh(windowGeometry, windowMaterial);
-                windowMesh.position.set(this.room.x+this.offsetX, this.room.height / 2 + this.offsetY, this.room.y+this.room.width / 2 );
-                windowMesh.castShadow = true;
-        windowMesh.receiveShadow = true;
-        console.log(windowMesh.position)
-        
-        this.scene.add(windowMesh);
-                break;
-            case 'left':
-                windowGeometry = new THREE.BoxGeometry(this.room.thickness*2,this.height, this.width);
-                windowMesh = new THREE.Mesh(windowGeometry, windowMaterial);
-                windowMesh.position.set(this.room.x-this.room.length/2, this.room.height / 2 + this.offsetY, this.room.y+this.offsetX);
-                windowMesh.castShadow = true;
-        windowMesh.receiveShadow = true;
-        console.log(windowMesh.position)
-        
-        this.scene.add(windowMesh);
-                break;
-            case 'right':
-                windowGeometry = new THREE.BoxGeometry(this.room.thickness*2,this.height, this.width);
-                windowMesh = new THREE.Mesh(windowGeometry, windowMaterial);
-                windowMesh.position.set(this.room.x+this.room.length/2, this.room.height / 2 + this.offsetY, this.room.y+this.offsetX);
-                windowMesh.castShadow = true;
-        windowMesh.receiveShadow = true;
-        console.log(windowMesh.position)
-        
-        this.scene.add(windowMesh);
-                break;
-            default:
-                console.error("Invalid wall position. Choose 'front', 'back', 'left', or 'right'.");
-                return;
-        }
-
-        
-
-    }
-}
-
-export {Room,RoomWindow,Door,Floor};
+export {Room,Floor};

@@ -1,5 +1,6 @@
 import { Wall, FloorRoof } from '../classes/wall.js';
 import * as THREE from 'three';
+import { scale } from '../scenes/mainScene.js';
 
 export function constructCubicasa(scene, fullHouse, roof) {
     const jsonLoader = new THREE.FileLoader();
@@ -33,5 +34,5 @@ export function constructCubicasa(scene, fullHouse, roof) {
             floor.createFloor();
         });
     });
-    fullHouse.translateY(-0.5);
+    fullHouse.translateY(-0.5*scale);
 }

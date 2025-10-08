@@ -1,4 +1,4 @@
-import { Room ,Floor, RoomWindow} from '../classes/room.js';
+import { Room } from '../classes/room.js';
 
 export function constructPrestige(scene, fullHouse, roof) {
     const livingRoom = new Room('Living Room', scene,fullHouse, 0, 0, 12, 20, 10,roof,0xFFB6C1);

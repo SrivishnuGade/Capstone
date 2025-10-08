@@ -59,3 +59,55 @@ nav ul{
     transform-origin: center; */
 }
 
+#chContainer {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 20;
+    background: rgba(0,0,0,0.5);
+    padding: 10px;
+    border-radius: 8px;
+}
+
+#chLabel {
+    color: #fff;
+    margin-right: 8px;
+}
+
+#roofLabel {
+    color: #fff;
+    margin-left: 12px;
+}
+
+#sliderContainer {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 10;
+}
+
+.slider-group {
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.slider-group label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.slider-group input[type="range"] {
+    width: 200px;
+}
+
+.slider-labels {
+    position: absolute;
+    top: 35px;
+    width: 200px;
+    display: flex;
+    justify-content: space-between;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    color: #fff;
+    margin-top: 5px;
+}

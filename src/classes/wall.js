@@ -1,16 +1,17 @@
 import * as THREE from 'three';
 import { CSG } from 'three-csg-ts';
+import { scale } from '../scenes/mainScene.js';
 
 class Wall {
     constructor(name, scene, fullgroup, points, height, doors = [], windows = []) {
         this.name = name;
         this.scene = scene;
         this.points = points;
-        this.height = height;
+        this.height = height*scale;
         this.doors = doors;
         this.windows = windows;
         this.walls = {};
-        this.thickness = 1;
+        this.thickness = 1*scale;
         this.group = new THREE.Group();
         fullgroup.add(this.group);
     }
@@ -22,7 +23,7 @@ class Wall {
         const shape = new THREE.Shape();
         const coords = this.points.split(" ").map(p => {
             const [x, z] = p.split(",").map(Number); // Treat second value as Z
-            return [x, z];
+            return [x*scale, z*scale];
         });
         shape.moveTo(coords[0][0], coords[0][1]);
         for (let i = 1; i < coords.length; i++) {
@@ -40,10 +41,11 @@ class Wall {
     addWindow(height, points, offsetY = 0) {
         // points is a list of edges of a polygon of the from  "-30.62,17.02 22.42,17.02 21.70,16.29 -29.89,16.29"
         // Create window geometry
+        height = height*scale;
         const shape = new THREE.Shape();
         const coords = points.split(" ").map(p => {
             const [x, z] = p.split(",").map(Number);
-            return [x, z];
+            return [x*scale, z*scale];
         });
 
         let cx = 0, cz = 0;
@@ -67,7 +69,7 @@ class Wall {
             shape.lineTo(grownCoords[i][0], grownCoords[i][1]);
         }
         const windowGeometry = new THREE.ExtrudeGeometry(shape, { depth: height, bevelEnabled: false });
-        windowGeometry.translate(0, 0, 5 - height / 2); // raise the window vertically
+        windowGeometry.translate(0, 0, 5*scale - height / 2); // raise the window vertically
         const windowMesh = new THREE.Mesh(windowGeometry);
         windowMesh.rotation.x = -Math.PI / 2;
 
@@ -115,14 +117,14 @@ class Wall {
         const shape = new THREE.Shape();
         const coords = points.split(" ").map(p => {
             const [x, z] = p.split(",").map(Number);
-            return [x, z];
+            return [x*scale, z*scale];
         });
         shape.moveTo(coords[0][0], coords[0][1]);
         for (let i = 1; i < coords.length; i++) {
             shape.lineTo(coords[i][0], coords[i][1]);
         }
-        const doorGeometry = new THREE.ExtrudeGeometry(shape, { depth: 7, bevelEnabled: false });
-        doorGeometry.translate(0, 0, 0.5); // raise the door vertically
+        const doorGeometry = new THREE.ExtrudeGeometry(shape, { depth: 7*scale, bevelEnabled: false });
+        doorGeometry.translate(0, 0, 0.5*scale); // raise the door vertically
         const doorMesh = new THREE.Mesh(doorGeometry);
         doorMesh.rotation.x = -Math.PI / 2;
 
@@ -174,7 +176,7 @@ class FloorRoof {
         this.scene = scene;
         this.fullgroup = fullgroup;
         this.points = points;
-        this.thickness = thickness;
+        this.thickness = thickness*scale;
         this.roof = roof;
         this.group = new THREE.Group();
         fullgroup.add(this.group);
@@ -189,7 +191,7 @@ class FloorRoof {
         const shape = new THREE.Shape();
         const coords = this.points.split(" ").map(p => {
             const [x, z] = p.split(",").map(Number); // Treat second value as Z
-            return [x, z];
+            return [x*scale, z*scale];
         });
         shape.moveTo(coords[0][0], coords[0][1]);
         for (let i = 1; i < coords.length; i++) {
@@ -240,17 +242,17 @@ class FloorRoof {
         const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
         const sprite = new THREE.Sprite(material);
         const aspect = size / baseSize;
-        sprite.scale.set(2 * aspect, 2, 2); // Width scales with aspect, height stays the same
+        sprite.scale.set(2*scale * aspect, 2*scale, 2*scale); // Width scales with aspect, height stays the same
 
         // Position the sprite at the centroid and slightly above the floor
-        sprite.position.set(cx, this.thickness + 5, -cz);
+        sprite.position.set(cx, this.thickness + 5*scale, -cz);
 
         this.group.add(sprite);
 
         if (this.roof) {
             const roofMaterial = new THREE.MeshStandardMaterial({ color: 0x888888 });
             const roof = new THREE.Mesh(geometry, roofMaterial);
-            roof.position.y = -this.thickness + 10; // Position the roof above the floor
+            roof.position.y = -this.thickness + 10*scale; // Position the roof above the floor
             roof.castShadow = true;
             roof.receiveShadow = true;
             roof.rotation.x = -Math.PI / 2;

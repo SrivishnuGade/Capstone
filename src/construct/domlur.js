@@ -1,4 +1,4 @@
-import { Room ,Floor, RoomWindow} from '../classes/room.js';
+import { Room ,Floor} from '../classes/room.js';
 
 export function constructDomLur(scene, fullHouse, roof) {
     const livingRoom = new Room('Living Room', scene,fullHouse, 0, 0, 25, 10, 10,roof,0xFFB6C1);
@@ -7,7 +7,6 @@ export function constructDomLur(scene, fullHouse, roof) {
     const bedroom = new Room('Bedroom', scene,fullHouse, 12.5+8-6, 10, 12, 10, 10,roof,0xFFFFE0);
     const bathroom = new Room('Bathroom', scene,fullHouse, 4.5, 5+3+4, 8, 6, 10,roof);
     const floorbath= new Floor('Floorbath',scene,fullHouse,0.5+4,7,8,4,roof)
-    // const bedroom = new Room('Bedroom', scene, 10, -20, 20, 15, 10);
 
     livingRoom.createRoom();
     livingRoom.addDoor('left',-3);

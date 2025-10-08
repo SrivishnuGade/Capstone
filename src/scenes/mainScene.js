@@ -3,6 +3,7 @@ import { initFog } from '../environment/fog.js';
 import { initGround } from '../environment/ground.js';
 import { initSky } from '../environment/sky.js';
 import { initAmbientLight } from '../environment/ambientLight.js';
+import { initDirections } from '../environment/directions.js';
 import { constructDomLur } from '../construct/domlur.js';
 // import { constructMQTT } from '../construct/mqtt.js';
 import { constructCubicasa } from '../construct/cubicasa.js';
@@ -15,24 +16,27 @@ let lz = 0.0;
 let theta = 90.0;
 let phi = 0.0;
 let lat = 13;
+const scale = 0.3048;
+// const scale = 1.0;
 
 const scene = new THREE.Scene();
 initFog(scene);
 initGround(scene);
 initSky(scene);
 initAmbientLight(scene);
+initDirections(scene);
 
-let radius = 200; 
+let radius = 200*scale; 
 let isDragging = false;
 let previousMousePosition = { x: 0, y: 0 };
-let targetRotationX = -90-45, targetRotationY = 10;
-let rotationSpeed = 0.7;
-let zoomSpeed = 0.05;
+let targetRotationX = -90+70, targetRotationY = 10;
+let rotationSpeed = 0.4;
+let zoomSpeed = 0.05*scale;
 let camX = 0, camZ = 0;
-let camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 2000);
-camera.position.set(0, 55, -90);
+let camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1*scale, 2000*scale);
+camera.position.set(0, 55*scale, -90*scale);
 
-const higherFOVCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const higherFOVCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1*scale, 1000*scale);
 higherFOVCamera.position.copy(camera.position);
 higherFOVCamera.lookAt(scene.position);
 
@@ -63,11 +67,11 @@ function onWheel(event) {
     radius = Math.max(10, Math.min(500, radius));
 }
 function onKeyDown(event) {
-    var sp=0.5
+    var sp=0.5*scale
     if (event.key === 'c' || event.key === 'C') {
         if (camera === higherFOVCamera) {
-            camX=0,camZ=0;
-            camera = new THREE.PerspectiveCamera(20, window.innerWidth / window.innerHeight, 10, 8000);
+            camX=0,camZ=0;radius=200*scale;
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1*scale, 2000*scale);
             camera.position.copy(higherFOVCamera.position);
             camera.lookAt(scene.position);
         } else {
@@ -114,107 +118,95 @@ renderer.xr.enabled = true;
 document.body.appendChild(VRButton.createButton(renderer));
 
 const sunlight = new THREE.DirectionalLight(0xffffff, 3);
-lx = 100 * Math.cos(THREE.MathUtils.degToRad(theta));
-ly = 100 * Math.sin(THREE.MathUtils.degToRad(theta));
-lz = 100 * Math.tan(THREE.MathUtils.degToRad(phi+lat));
+lx = 100*scale * Math.cos(THREE.MathUtils.degToRad(theta));
+ly = 100*scale * Math.sin(THREE.MathUtils.degToRad(theta));
+lz = 100*scale * Math.tan(THREE.MathUtils.degToRad(phi+lat));
 sunlight.position.set(lx, ly, lz);
 sunlight.castShadow = true;
-sunlight.shadow.camera.left = -500;
-sunlight.shadow.camera.right = 500;
-sunlight.shadow.camera.top = 500;
-sunlight.shadow.camera.bottom = -500;
-sunlight.shadow.camera.near = 0.5;
-sunlight.shadow.camera.far = 1000;
+sunlight.shadow.camera.left = -500*scale;
+sunlight.shadow.camera.right = 500*scale;
+sunlight.shadow.camera.top = 500*scale;
+sunlight.shadow.camera.bottom = -500*scale;
+sunlight.shadow.camera.near = 0.5*scale;
+sunlight.shadow.camera.far = 1000*scale;
 sunlight.shadow.bias = -0.00006;
 sunlight.shadow.mapSize.width = 16384;
 sunlight.shadow.mapSize.height = 16384;
 scene.add(sunlight);
 
-const wallMaterial = new THREE.MeshStandardMaterial({ color: 0xFFFFFF });
-const frontWallGeometry = new THREE.BoxGeometry(100, 10,1);
-const frontWall = new THREE.Mesh(frontWallGeometry, wallMaterial);
-frontWall.position.set(0, 5, -200);
-frontWall.castShadow = true;
-frontWall.receiveShadow = true;
-scene.add(frontWall);
-
 let fullHouse= new THREE.Group();
 scene.add(fullHouse);
 
-const chContainer = document.createElement('div');
-chContainer.style.position = 'absolute';
-chContainer.style.top = '10px';
-chContainer.style.right = '10px';
-chContainer.style.zIndex = '20';
-chContainer.style.background = 'rgba(0,0,0,0.5)';
-chContainer.style.padding = '10px';
-chContainer.style.borderRadius = '8px';
+let m=false;
 
-const chLabel = document.createElement('label');
-chLabel.textContent = 'Choose House Type: ';
-chLabel.style.color = '#fff';
-chLabel.style.marginRight = '8px';
+if(!m){
+    const chContainer = document.createElement('div');
+    chContainer.id='chContainer';
 
-const chSelect = document.createElement('select');
-['Cubicasa', 'Domlur', 'Prestige'].forEach((name, idx) => {
-    const option = document.createElement('option');
-    option.value = idx + 1;
-    option.textContent = name;
-    chSelect.appendChild(option);
-});
-chContainer.appendChild(chLabel);
-chContainer.appendChild(chSelect);
+    const chLabel = document.createElement('label');
+    chLabel.id = 'chLabel';
+    chLabel.textContent = 'Choose House Type: ';
 
-// Roof checkbox
-const roofLabel = document.createElement('label');
-roofLabel.textContent = ' Roof ';
-roofLabel.style.color = '#fff';
-roofLabel.style.marginLeft = '12px';
 
-const roofCheckbox = document.createElement('input');
-roofCheckbox.type = 'checkbox';
-roofCheckbox.checked = true;
+    const chSelect = document.createElement('select');
+    ['Cubicasa', 'Domlur', 'Prestige'].forEach((name, idx) => {
+        const option = document.createElement('option');
+        option.value = idx + 1;
+        option.textContent = name;
+        chSelect.appendChild(option);
+    });
+    chContainer.appendChild(chLabel);
+    chContainer.appendChild(chSelect);
 
-chContainer.appendChild(roofLabel);
-chContainer.appendChild(roofCheckbox);
+    // Roof checkbox
+    const roofLabel = document.createElement('label');
+    roofLabel.id = 'roofLabel';
+    roofLabel.textContent = ' Roof ';
 
-document.body.appendChild(chContainer);
+    const roofCheckbox = document.createElement('input');
+    roofCheckbox.type = 'checkbox';
+    roofCheckbox.checked = true;
 
-let roof = roofCheckbox.checked;
+    chContainer.appendChild(roofLabel);
+    chContainer.appendChild(roofCheckbox);
 
-// Function to clear and reconstruct house
-function updateHouseType(ch, roof) {
-    scene.remove(fullHouse);
-    fullHouse = new THREE.Group();
-    scene.add(fullHouse);
+    document.body.appendChild(chContainer);
 
-    if (ch == 1) {
-        constructCubicasa(scene, fullHouse, roof);
-    } else if (ch == 2) {
-        constructDomLur(scene, fullHouse, roof);
-    } else if (ch == 3) {
-        constructPrestige(scene, fullHouse, roof);
+    // Function to clear and reconstruct house
+    function updateHouseType(ch, roof) {
+        scene.remove(fullHouse);
+        fullHouse = new THREE.Group();
+        scene.add(fullHouse);
+
+        if (ch == 1) {
+            constructCubicasa(scene, fullHouse, roof);
+        } else if (ch == 2) {
+            constructDomLur(scene, fullHouse, roof);
+        } else if (ch == 3) {
+            constructPrestige(scene, fullHouse, roof);
+        }
     }
+
+    // Initial construction
+    updateHouseType(parseInt(chSelect.value), roofCheckbox.checked);
+
+    // Listen for dropdown and checkbox changes
+    chSelect.addEventListener('change', () => {
+        updateHouseType(parseInt(chSelect.value), roofCheckbox.checked);
+    });
+    roofCheckbox.addEventListener('change', () => {
+        updateHouseType(parseInt(chSelect.value), roofCheckbox.checked);
+    });
 }
-
-// Initial construction
-updateHouseType(parseInt(chSelect.value), roofCheckbox.checked);
-
-// Listen for dropdown and checkbox changes
-chSelect.addEventListener('change', () => {
-    updateHouseType(parseInt(chSelect.value), roofCheckbox.checked);
-});
-roofCheckbox.addEventListener('change', () => {
-    updateHouseType(parseInt(chSelect.value), roofCheckbox.checked);
-});
-
-
+// else{
+//     constructMQTT(scene, fullHouse, camera, renderer, true);
+// }
 function renderLoop() {
     if (camera === higherFOVCamera) {
         targetRotationY=Math.max(-90, Math.min(90, targetRotationY));
         camera.position.set(
             camX,
-            5.5,
+            5.5*scale,
             camZ
         );
         const offsetX = -radius * Math.sin(THREE.MathUtils.degToRad(targetRotationX)) * Math.cos(THREE.MathUtils.degToRad(targetRotationY));
@@ -222,7 +214,7 @@ function renderLoop() {
         const offsetZ = -radius * Math.cos(THREE.MathUtils.degToRad(targetRotationX)) * Math.cos(THREE.MathUtils.degToRad(targetRotationY));
         camera.lookAt(
             camX + offsetX,
-            5.5+offsetY,
+            5.5*scale+offsetY,
             camZ+offsetZ
         );
     } else {
@@ -245,14 +237,11 @@ renderer.setAnimationLoop(renderLoop);
 
 function createSliderWithLabels(labelText, min, max, step, initialValue, onChange, labels) {
     const container = document.createElement('div');
-    container.style.marginBottom = '20px';
-    container.style.position = 'relative';
+    container.className = 'slider-group';
 
     // Create the label
     const label = document.createElement('label');
     label.textContent = labelText;
-    label.style.display = 'block';
-    label.style.marginBottom = '5px';
     container.appendChild(label);
 
     // Create the slider
@@ -262,26 +251,17 @@ function createSliderWithLabels(labelText, min, max, step, initialValue, onChang
     slider.max = max;
     slider.step = step;
     slider.value = initialValue;
-    slider.style.width = '200px';
     container.appendChild(slider);
 
     // Add slider event
     slider.addEventListener('input', () => {
         onChange(slider.value);
-        isDragging=false;
+        isDragging = false;
     });
 
     // Create a label container for the slider
     const labelsContainer = document.createElement('div');
-    labelsContainer.style.position = 'absolute';
-    labelsContainer.style.top = '35px';
-    labelsContainer.style.width = '200px';
-    labelsContainer.style.display = 'flex';
-    labelsContainer.style.justifyContent = 'space-between';
-    labelsContainer.style.fontFamily = 'Arial, sans-serif';
-    labelsContainer.style.fontSize = '12px';
-    labelsContainer.style.color = '#fff';
-    labelsContainer.style.marginTop = '5px';
+    labelsContainer.className = 'slider-labels';
 
     // Add labels to the slider track
     labels.forEach((text) => {
@@ -296,12 +276,8 @@ function createSliderWithLabels(labelText, min, max, step, initialValue, onChang
     return slider;
 }
 
-// Example: Adding sliders for Sunlight Direction and Elevation
 const sliderContainer = document.createElement('div');
-sliderContainer.style.position = 'absolute';
-sliderContainer.style.top = '10px';
-sliderContainer.style.left = '10px';
-sliderContainer.style.zIndex = '10';
+sliderContainer.id = 'sliderContainer';
 document.body.appendChild(sliderContainer);
 
 // Sunlight Direction Slider
@@ -339,3 +315,5 @@ createSliderWithLabels(
     },
     ['N','E','S','W',' ']
 );
+
+export { scale };
