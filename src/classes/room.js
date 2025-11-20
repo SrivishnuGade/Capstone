@@ -94,10 +94,29 @@ class Room{
         this.walls.innerRight = innerRightWall;
         this.group.add(innerRightWall);    
     
-        // Floor
+        
+        // const texLoader = new THREE.TextureLoader();
+        // const floorTexture = texLoader.load('tiles/Tiles_067_basecolor.png');
+        // const floorNormalMap = texLoader.load('tiles/Tiles_067_normal.png');
+        // const floorHeightMap = texLoader.load('tiles/Tiles_067_height.png');
+        // const floorRoughnessMap = texLoader.load('tiles/Tiles_067_roughness.png');
+        // const floorAOmap= texLoader.load('tiles/Tiles_067_ambientOcclusion.png');
+
+        // const floorMaterial = new THREE.MeshStandardMaterial({
+        //     map: floorTexture,
+        //     normalMap: floorNormalMap,
+        //     // displacementMap: floorHeightMap,
+        //     // displacementScale: 0.01*scale,
+        //     roughnessMap: floorRoughnessMap,
+        //     roughness: 0.2,
+        //     aoMap: floorAOmap,
+        //     aoMapIntensity: 1.5,
+        //     metalness: 0.6
+        // });
         const floorMaterial = new THREE.MeshStandardMaterial({ color: 0xaaaaaa });
         const floorGeometry = new THREE.BoxGeometry(this.length, thickness, this.width);
         const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+        // floor.geometry.attributes.uv2 = floor.geometry.attributes.uv;
         floor.position.set(0, -thickness/2, 0);
         floor.receiveShadow = true;
         floor.castShadow = true;
@@ -358,7 +377,7 @@ class Room{
         } catch (error) {
             console.error('Error creating door:', error);
         }
-    }  
+    }
     addCavity(wall, width, offsetX = 0) {
         width=width*scale;
         offsetX=offsetX*scale;

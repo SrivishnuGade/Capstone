@@ -1,0 +1,445 @@
+{
+  "rooms": [
+    {
+      "name": "Living Room",
+      "type": "Living Room",
+      "width": 20.0,
+      "length": 15.0,
+      "x": 7.5,
+      "y": -10.0,
+      "adjacency": {
+        "top": [
+          [
+            "Kitchen",
+            0.0
+          ]
+        ],
+        "right": [
+          [
+            "Bathroom 2",
+            -5.0
+          ],
+          [
+            "Bathroom 3",
+            3.0
+          ]
+        ],
+        "bottom": [],
+        "left": []
+      }
+    },
+    {
+      "name": "Kitchen",
+      "type": "Kitchen",
+      "width": 20.0,
+      "length": 15.0,
+      "x": 7.5,
+      "y": -30.0,
+      "adjacency": {
+        "top": [],
+        "right": [
+          [
+            "Master Bedroom 1",
+            2.5
+          ]
+        ],
+        "bottom": [
+          [
+            "Living Room",
+            0.0
+          ]
+        ],
+        "left": []
+      }
+    },
+    {
+      "name": "Dining Room",
+      "type": "Dining Room",
+      "width": 10.0,
+      "length": 12.0,
+      "x": 27.0,
+      "y": -20.0,
+      "adjacency": {
+        "top": [
+          [
+            "Master Bedroom 1",
+            6.0
+          ],
+          [
+            "Bedroom 3",
+            -6.0
+          ]
+        ],
+        "right": [
+          [
+            "Bathroom 1",
+            0.0
+          ],
+          [
+            "Balcony 1",
+            -8.0
+          ]
+        ],
+        "bottom": [
+          [
+            "Bedroom 2",
+            0.0
+          ]
+        ],
+        "left": [
+          [
+            "Bathroom 3",
+            7.0
+          ],
+          [
+            "Balcony 3",
+            -1.0
+          ]
+        ]
+      }
+    },
+    {
+      "name": "Master Bedroom 1",
+      "type": "Master Bedroom",
+      "width": 15.0,
+      "length": 12.0,
+      "x": 21.0,
+      "y": -32.5,
+      "adjacency": {
+        "top": [],
+        "right": [
+          [
+            "Bedroom 3",
+            0.0
+          ]
+        ],
+        "bottom": [
+          [
+            "Dining Room",
+            6.0
+          ],
+          [
+            "Balcony 3",
+            -2.5
+          ]
+        ],
+        "left": [
+          [
+            "Kitchen",
+            2.5
+          ]
+        ]
+      }
+    },
+    {
+      "name": "Bedroom 2",
+      "type": "Bedroom",
+      "width": 15.0,
+      "length": 12.0,
+      "x": 27.0,
+      "y": -7.5,
+      "adjacency": {
+        "top": [
+          [
+            "Dining Room",
+            0.0
+          ]
+        ],
+        "right": [
+          [
+            "Balcony 1",
+            4.5
+          ],
+          [
+            "Balcony 2",
+            -3.5
+          ]
+        ],
+        "bottom": [],
+        "left": [
+          [
+            "Bathroom 2",
+            2.5
+          ],
+          [
+            "Bathroom 3",
+            -5.5
+          ]
+        ]
+      }
+    },
+    {
+      "name": "Bedroom 3",
+      "type": "Bedroom",
+      "width": 15.0,
+      "length": 12.0,
+      "x": 33.0,
+      "y": -32.5,
+      "adjacency": {
+        "top": [],
+        "right": [],
+        "bottom": [
+          [
+            "Dining Room",
+            -6.0
+          ]
+        ],
+        "left": [
+          [
+            "Master Bedroom 1",
+            0.0
+          ]
+        ]
+      }
+    },
+    {
+      "name": "Bathroom 1",
+      "type": "Bathroom",
+      "width": 8.0,
+      "length": 6.0,
+      "x": 36.0,
+      "y": -20.0,
+      "adjacency": {
+        "top": [],
+        "right": [],
+        "bottom": [
+          [
+            "Balcony 1",
+            -0.5
+          ]
+        ],
+        "left": [
+          [
+            "Dining Room",
+            0.0
+          ]
+        ]
+      }
+    },
+    {
+      "name": "Bathroom 2",
+      "type": "Bathroom",
+      "width": 8.0,
+      "length": 6.0,
+      "x": 18.0,
+      "y": -5.0,
+      "adjacency": {
+        "top": [
+          [
+            "Bathroom 3",
+            0.0
+          ]
+        ],
+        "right": [
+          [
+            "Bedroom 2",
+            2.5
+          ]
+        ],
+        "bottom": [],
+        "left": [
+          [
+            "Living Room",
+            -5.0
+          ]
+        ]
+      }
+    },
+    {
+      "name": "Bathroom 3",
+      "type": "Bathroom",
+      "width": 8.0,
+      "length": 6.0,
+      "x": 18.0,
+      "y": -13.0,
+      "adjacency": {
+        "top": [
+          [
+            "Balcony 3",
+            -0.5
+          ]
+        ],
+        "right": [
+          [
+            "Dining Room",
+            7.0
+          ],
+          [
+            "Bedroom 2",
+            -5.5
+          ]
+        ],
+        "bottom": [
+          [
+            "Bathroom 2",
+            0.0
+          ]
+        ],
+        "left": [
+          [
+            "Living Room",
+            3.0
+          ]
+        ]
+      }
+    },
+    {
+      "name": "Balcony 1",
+      "type": "Balcony",
+      "width": 8.0,
+      "length": 5.0,
+      "x": 35.5,
+      "y": -12.0,
+      "adjacency": {
+        "top": [
+          [
+            "Bathroom 1",
+            -0.5
+          ]
+        ],
+        "right": [],
+        "bottom": [
+          [
+            "Balcony 2",
+            1.25
+          ]
+        ],
+        "left": [
+          [
+            "Dining Room",
+            -8.0
+          ],
+          [
+            "Bedroom 2",
+            4.5
+          ]
+        ]
+      }
+    },
+    {
+      "name": "Balcony 2",
+      "type": "Balcony",
+      "width": 8.0,
+      "length": 7.5,
+      "x": 36.75,
+      "y": -4.0,
+      "adjacency": {
+        "top": [
+          [
+            "Balcony 1",
+            1.25
+          ]
+        ],
+        "right": [],
+        "bottom": [],
+        "left": [
+          [
+            "Bedroom 2",
+            -3.5
+          ]
+        ]
+      }
+    },
+    {
+      "name": "Balcony 3",
+      "type": "Balcony",
+      "width": 8.0,
+      "length": 5.0,
+      "x": 18.5,
+      "y": -21.0,
+      "adjacency": {
+        "top": [
+          [
+            "Master Bedroom 1",
+            -2.5
+          ]
+        ],
+        "right": [
+          [
+            "Dining Room",
+            -1.0
+          ]
+        ],
+        "bottom": [
+          [
+            "Bathroom 3",
+            -0.5
+          ]
+        ],
+        "left": []
+      }
+    }
+  ],
+  "doors": [
+    {
+      "x": 33.0,
+      "y": -20.0,
+      "room1": "Dining Room",
+      "room2": "Bathroom 1",
+      "orientation": "vertical"
+    },
+    {
+      "x": 7.5,
+      "y": -20.0,
+      "room1": "Living Room",
+      "room2": "Kitchen",
+      "orientation": "horizontal"
+    },
+    {
+      "x": 21.0,
+      "y": -12.0,
+      "room1": "Bathroom 3",
+      "room2": "Bedroom 2",
+      "orientation": "vertical"
+    },
+    {
+      "x": 27.0,
+      "y": -15.0,
+      "room1": "Dining Room",
+      "room2": "Bedroom 2",
+      "orientation": "horizontal"
+    },
+    {
+      "x": 21.0,
+      "y": -5.0,
+      "room1": "Bathroom 2",
+      "room2": "Bedroom 2",
+      "orientation": "vertical"
+    },
+    {
+      "x": 21.0,
+      "y": -21.0,
+      "room1": "Dining Room",
+      "room2": "Balcony 3",
+      "orientation": "vertical"
+    },
+    {
+      "x": 33.0,
+      "y": -4.0,
+      "room1": "Bedroom 2",
+      "room2": "Balcony 2",
+      "orientation": "vertical"
+    },
+    {
+      "x": 15.0,
+      "y": -32.5,
+      "room1": "Kitchen",
+      "room2": "Master Bedroom 1",
+      "orientation": "vertical"
+    },
+    {
+      "x": 24.0,
+      "y": -25.0,
+      "room1": "Dining Room",
+      "room2": "Master Bedroom 1",
+      "orientation": "horizontal"
+    },
+    {
+      "x": 30.0,
+      "y": -25.0,
+      "room1": "Dining Room",
+      "room2": "Bedroom 3",
+      "orientation": "horizontal"
+    }
+  ]
+}
