@@ -19,7 +19,7 @@ let lz = 0.0;
 let theta = 90.0;
 let phi = 0.0;
 let lat = 13;
-const scale = 0.3048;
+let scale = 0.3048;
 // const scale = 1.0;
 
 const scene = new THREE.Scene();
@@ -131,7 +131,7 @@ const raycaster = new THREE.Raycaster();
 const tmpVec = new THREE.Vector3();
 const forward = new THREE.Vector3();
 const up = new THREE.Vector3(0, 1, 0);
-const vrMoveSpeed = 1.2 * scale;        // meters per second multiplier
+const vrMoveSpeed = 5 * scale;        // meters per second multiplier
 const thumbDeadzone = 0.15;
 
 const sunlight = new THREE.DirectionalLight(0xffffff, 3);
@@ -255,11 +255,108 @@ function renderLoop() {
         );
         camera.lookAt(0, 0, 0);
     }
-    if (renderer.xr.isPresenting) updateVRControllers(delta);
+    if (renderer.xr.isPresenting) {
+        updateVRControllers(delta);
+    } else {
+        updateGamepadControls(delta);
+    }
     renderer.render(scene, camera);
 }
 
 renderer.setAnimationLoop(renderLoop);
+
+function updateGamepadControls(delta) {
+    const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+    let gp = null;
+    for (let i = 0; i < gamepads.length; i++) {
+        if (gamepads[i]) {
+            gp = gamepads[i];
+            break;
+        }
+    }
+
+    if (!gp) return;
+
+    // Deadzone
+    const deadzone = 0.15;
+
+    // --- Left Stick: Movement (WASD equivalent) ---
+    // Axes 0: Left Stick X (-1 Left, 1 Right)
+    // Axes 1: Left Stick Y (-1 Up/Forward, 1 Down/Backward)
+    let moveX = gp.axes[0];
+    let moveY = gp.axes[1];
+
+    if (Math.abs(moveX) < deadzone) moveX = 0;
+    if (Math.abs(moveY) < deadzone) moveY = 0;
+
+    if (moveX !== 0 || moveY !== 0) {
+        const moveSpeed = 7.0 * scale * delta; // Adjust speed as needed
+
+        // Calculate movement based on camera rotation (targetRotationX)
+        const rotRad = THREE.MathUtils.degToRad(targetRotationX);
+        const sinRot = Math.sin(rotRad);
+        const cosRot = Math.cos(rotRad);
+
+        // Forward/Backward (moveY)
+        // Note: moveY is positive when pulling back (S key), negative when pushing forward (W key)
+        camX += moveY * moveSpeed * sinRot;
+        camZ += moveY * moveSpeed * cosRot;
+
+        // Left/Right (moveX)
+        // Note: moveX is positive right (D key), negative left (A key)
+        camX += moveX * moveSpeed * cosRot;
+        camZ -= moveX * moveSpeed * sinRot;
+    }
+
+    // --- Right Stick: Camera Rotation / Orbit ---
+    // Axes 2: Right Stick X (-1 Left, 1 Right)
+    // Axes 3: Right Stick Y (-1 Up, 1 Down)
+    let rotX = gp.axes[2];
+    let rotY = gp.axes[3];
+
+    if (Math.abs(rotX) < deadzone) rotX = 0;
+    if (Math.abs(rotY) < deadzone) rotY = 0;
+
+    if (rotX !== 0 || rotY !== 0) {
+        const rotSpeed = 200 * delta; // Adjust rotation speed
+        // Emulate mouse drag:
+        // Mouse X moves targetRotationX (Yaw)
+        // Mouse Y moves targetRotationY (Pitch)
+        targetRotationX -= rotX * rotSpeed;
+        targetRotationY += rotY * rotSpeed; // Invert Y for natural feel (Up looks Up)
+    }
+
+    // --- D-Pad: Sunlight Control ---
+    // B12: Up, B13: Down, B14: Left, B15: Right
+    const bUp = gp.buttons[12]?.pressed;
+    const bDown = gp.buttons[13]?.pressed;
+    const bLeft = gp.buttons[14]?.pressed;
+    const bRight = gp.buttons[15]?.pressed;
+
+    if (bUp || bDown || bLeft || bRight) {
+        const sunSpeed = 50 * delta;
+
+        // Time of Day (Theta): Left/Right
+        if (bLeft) theta += sunSpeed;
+        if (bRight) theta -= sunSpeed;
+        theta = Math.max(5, Math.min(175, theta));
+
+        // Season (Phi): Up/Down
+        if (bUp) phi -= sunSpeed;   // Up decreases phi (Summer)
+        if (bDown) phi += sunSpeed; // Down increases phi (Winter)
+        phi = Math.max(-23.5, Math.min(23.5, phi));
+
+        // Update Sunlight Position
+        lx = 100 * scale * Math.cos(THREE.MathUtils.degToRad(theta));
+        ly = 100 * scale * Math.sin(THREE.MathUtils.degToRad(theta));
+        lz = 100 * scale * Math.tan(THREE.MathUtils.degToRad(phi + lat));
+        sunlight.position.set(lx, ly, lz);
+
+        // Update Sliders
+        if (timeSlider) timeSlider.value = theta;
+        if (seasonSlider) seasonSlider.value = phi;
+    }
+}
 
 function setupVRControllers() {
     // controller 0 (left) and 1 (right)
@@ -349,9 +446,10 @@ function updateVRControllers(delta) {
     const gpRight = controllerRight && controllerRight.userData ? controllerRight.userData.gamepad : null;
     if (gpRight) {
         // Right thumbstick axes
-        let axR = gpRight.axes && gpRight.axes.length >= 4 ? gpRight.axes[2] : (gpRight.axes && gpRight.axes.length >= 2 ? gpRight.axes[0] : 0);
-        let ayR = gpRight.axes && gpRight.axes.length >= 4 ? gpRight.axes[3] : (gpRight.axes && gpRight.axes.length >= 2 ? gpRight.axes[1] : 0);
+        let axR = gpRight.axes[2];
+        let ayR = gpRight.axes[3];
 
+        console.log(axR)
         // Apply deadzone
         axR = Math.abs(axR) < thumbDeadzone ? 0 : axR;
         ayR = Math.abs(ayR) < thumbDeadzone ? 0 : ayR;
@@ -375,6 +473,8 @@ function updateVRControllers(delta) {
             ly = 100 * scale * Math.sin(THREE.MathUtils.degToRad(theta));
             lz = 100 * scale * Math.tan(THREE.MathUtils.degToRad(phi + lat));
             sunlight.position.set(lx, ly, lz);
+            if (timeSlider) timeSlider.value = theta;
+            if (seasonSlider) seasonSlider.value = phi;
         }
     }
 }
@@ -425,7 +525,7 @@ sliderContainer.id = 'sliderContainer';
 document.body.appendChild(sliderContainer);
 
 // Sunlight Direction Slider
-createSliderWithLabels(
+const timeSlider = createSliderWithLabels(
     'Time of Day',
     5, 175, 1, theta,
     (value) => {
@@ -438,7 +538,7 @@ createSliderWithLabels(
 );
 
 // Sunlight Elevation Slider
-createSliderWithLabels(
+const seasonSlider = createSliderWithLabels(
     'Season',
     -23.5, 23.5, 1, phi,
     (value) => {
@@ -449,7 +549,7 @@ createSliderWithLabels(
     ['Summer', 'Winter']
 );
 
-createSliderWithLabels(
+const facingSlider = createSliderWithLabels(
     'Facing Direction',
     0, 360, 1, phi,
     (value) => {
